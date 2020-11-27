@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-agent-config
+  namespace: rook-ceph
+data:
+  vault-agent-config.hcl: |
+    # Uncomment this to have Agent run once (e.g. when running as an initContainer)
+    #exit_after_auth = true
+    exit_after_auth = false
+    pid_file = "/home/vault/pidfile"
+
+    auto_auth {
+        method "kubernetes" {
+            mount_path = "auth/kubernetes"
+            config = {
+                role = "radosgwrole"
+            }
+        }
+
+        sink "file" {
+            config = {
+                path = "/home/vault/vault.token"
+            }
+        }
+    }
+    cache {
+        use_auto_auth_token = true
+    }
+    listener "tcp" {
+        address = "127.0.0.1:8100"
+        tls_disable = true
+    }
+    vault {
+        address = "http://192.168.0.12:8200"
+    }

@@ -1,0 +1,42 @@
+spec:
+  template:
+    spec:
+      serviceAccountName: default
+      volumes:
+        - name: vault-token
+          emptyDir:
+            medium: Memory
+        - name: config
+          configMap:
+            name: vault-agent-config
+            items: 
+              - key: vault-agent-config.hcl
+                path: vault-agent-config.hcl
+
+      containers:
+    # Vault container (auth and template)
+      - name: vault-agent-auth-template
+        image: vault
+        imagePullPolicy: Always
+
+        volumeMounts:
+          - name: vault-token
+            mountPath: /home/vault
+
+          - name: config
+            mountPath: /etc/vault
+
+        env:
+          - name: HOME
+            value: /home/vault
+
+          - name: VAULT_ADDR
+            value: http://192.168.0.12:8200
+
+        # Run the Vault agent onsul-Template looks in $HOME/.vault-token, $VAULT_TOKEN, or -vault-token (via CLI)
+        args:
+          [
+            "agent",
+            "-config=/etc/vault/vault-agent-config.hcl",
+            #"-log-level=debug",
+          ]
